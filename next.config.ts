@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '100mb', // Allow larger video uploads
+    },
+  },
 };
 
 export default nextConfig;

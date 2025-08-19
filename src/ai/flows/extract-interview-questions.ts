@@ -25,7 +25,9 @@ export type ExtractInterviewQuestionsInput = z.infer<
 const ExtractInterviewQuestionsOutputSchema = z.object({
   questions: z
     .array(z.string())
-    .describe('A list of at least 10 questions extracted from the video transcript if available.'),
+    .describe(
+      'A list of at least 10 questions extracted from the video transcript if available.'
+    ),
 });
 export type ExtractInterviewQuestionsOutput = z.infer<
   typeof ExtractInterviewQuestionsOutputSchema
@@ -41,19 +43,19 @@ const prompt = ai.definePrompt({
   name: 'extractInterviewQuestionsPrompt',
   input: {schema: ExtractInterviewQuestionsInputSchema},
   output: {schema: ExtractInterviewQuestionsOutputSchema},
-  prompt: `You are an AI system that extracts interview questions from video transcripts.
+  prompt: `You are an AI system that extracts interview questions from a video.
+Your task is to analyze the provided video of a job interview. First, transcribe the audio from the video to get a full transcript. Then, from that transcript, identify and extract the questions asked by the interviewer.
 
-I will provide you with a video from a job interview.
-Your tasks are:
-1. Transcribe the video to identify what is said.
-2. Identify which lines are questions asked by the interviewer.
-3. Extract ONLY those questions. Aim for at least 10 questions if they are present in the video.
-4. Do not include the candidate's answers or any explanations.
-5. Do not generate new questions — only use what exists in the interview.
-6. Present the questions as a list of strings.
-7. If the same question is repeated or rephrased, keep only the clearest version.
+Follow these rules carefully:
+1.  Start by transcribing the entire video to text.
+2.  Read through the transcript and identify every question the interviewer asks.
+3.  Extract these questions accurately.
+4.  Aim to find at least 10 distinct questions if they are present in the interview.
+5.  Do not include any answers, comments, or dialogue from the candidate.
+6.  Do not make up new questions.
+7.  Format the output as a clean list of strings, with each string being a single question.
 
-Here is the video:
+Here is the video for you to process:
 {{media url=videoDataUri}}`,
 });
 
