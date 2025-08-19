@@ -24,7 +24,7 @@ import { getQuestionsAction } from './actions';
 export default function Home() {
   const { toast } = useToast();
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [questions, setQuestions] = useState('');
+  const [questions, setQuestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,7 +51,7 @@ export default function Home() {
 
     setIsLoading(true);
     setError(null);
-    setQuestions('');
+    setQuestions([]);
 
     try {
       const videoDataUri = await toBase64(videoFile);
@@ -59,7 +59,7 @@ export default function Home() {
       if (result.error) {
         setError(result.error);
       } else {
-        setQuestions(result.questions ?? '');
+        setQuestions(result.questions ?? []);
       }
     } catch (e) {
       setError('An unexpected error occurred while processing the video.');
@@ -69,12 +69,8 @@ export default function Home() {
   };
 
   const handleCopy = () => {
-    if (!questions) return;
-    const questionsToCopy = questions
-      .split('\n')
-      .filter((q) => q.trim().length > 0)
-      .map((q) => q.replace(/^\d+\.\s*/, ''))
-      .join('\n');
+    if (!questions.length) return;
+    const questionsToCopy = questions.join('\n');
     navigator.clipboard.writeText(questionsToCopy);
     toast({
       title: 'Copied to clipboard!',
@@ -84,16 +80,12 @@ export default function Home() {
 
   const handleClear = () => {
     setVideoFile(null);
-    setQuestions('');
+    setQuestions([]);
     setError(null);
     // Reset file input
     const fileInput = document.getElementById('video-upload') as HTMLInputElement;
     if(fileInput) fileInput.value = '';
   };
-
-  const formattedQuestions = questions
-    .split('\n')
-    .filter((q) => q.trim().length > 0);
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center p-4 sm:p-8">
@@ -150,7 +142,7 @@ export default function Home() {
                   type="button"
                   variant="ghost"
                   onClick={handleClear}
-                  disabled={!videoFile && !questions && !error}
+                  disabled={!videoFile && questions.length === 0 && !error}
                   className="text-muted-foreground"
                 >
                   <Trash2 className="mr-2 h-4 w-4" /> Clear
@@ -186,7 +178,7 @@ export default function Home() {
           </Alert>
         )}
 
-        {questions && !isLoading && (
+        {questions.length > 0 && !isLoading && (
           <Card className="shadow-lg animate-in fade-in-50">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-xl">
@@ -197,18 +189,18 @@ export default function Home() {
                 variant="outline"
                 size="icon"
                 onClick={handleCopy}
-                disabled={formattedQuestions.length === 0}
+                disabled={questions.length === 0}
               >
                 <Copy className="h-4 w-4" />
                 <span className="sr-only">Copy questions</span>
               </Button>
             </CardHeader>
             <CardContent>
-              {formattedQuestions.length > 0 ? (
+              {questions.length > 0 ? (
                 <ol className="list-decimal pl-5 space-y-3 text-base">
-                  {formattedQuestions.map((q, i) => (
+                  {questions.map((q, i) => (
                     <li key={i} className="ml-2 pl-2">
-                      {q.replace(/^\d+\.\s*/, '')}
+                      {q}
                     </li>
                   ))}
                 </ol>

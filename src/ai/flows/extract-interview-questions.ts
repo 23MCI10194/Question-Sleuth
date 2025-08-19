@@ -24,8 +24,8 @@ export type ExtractInterviewQuestionsInput = z.infer<
 
 const ExtractInterviewQuestionsOutputSchema = z.object({
   questions: z
-    .string()
-    .describe('A numbered list of questions extracted from the video transcript.'),
+    .array(z.string())
+    .describe('A list of questions extracted from the video transcript.'),
 });
 export type ExtractInterviewQuestionsOutput = z.infer<
   typeof ExtractInterviewQuestionsOutputSchema
@@ -50,7 +50,7 @@ Your tasks are:
 3. Extract ONLY those questions.
 4. Do not include the candidate's answers or any explanations.
 5. Do not generate new questions — only use what exists in the interview.
-6. Present the questions in a clean numbered list.
+6. Present the questions as a list of strings.
 7. If the same question is repeated or rephrased, keep only the clearest version.
 
 Here is the video:

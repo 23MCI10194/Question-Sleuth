@@ -6,7 +6,7 @@ import {
 } from '@/ai/flows/extract-interview-questions';
 
 interface ActionResult {
-  questions?: string;
+  questions?: string[];
   error?: string;
 }
 
