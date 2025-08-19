@@ -1,10 +1,9 @@
-// src/ai/flows/extract-interview-questions.ts
 'use server';
 
 /**
- * @fileOverview Extracts interview questions from a given transcript.
+ * @fileOverview Extracts interview questions from a given video.
  *
- * - extractInterviewQuestions - A function to extract interview questions from a transcript.
+ * - extractInterviewQuestions - A function to extract interview questions from a video.
  * - ExtractInterviewQuestionsInput - The input type for the extractInterviewQuestions function.
  * - ExtractInterviewQuestionsOutput - The return type for the extractInterviewQuestions function.
  */
@@ -13,9 +12,11 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const ExtractInterviewQuestionsInputSchema = z.object({
-  transcript: z
+  videoDataUri: z
     .string()
-    .describe('The transcript of the job interview video.'),
+    .describe(
+      "A video of a job interview, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+    ),
 });
 export type ExtractInterviewQuestionsInput = z.infer<
   typeof ExtractInterviewQuestionsInputSchema
@@ -24,7 +25,7 @@ export type ExtractInterviewQuestionsInput = z.infer<
 const ExtractInterviewQuestionsOutputSchema = z.object({
   questions: z
     .string()
-    .describe('A numbered list of questions extracted from the transcript.'),
+    .describe('A numbered list of questions extracted from the video transcript.'),
 });
 export type ExtractInterviewQuestionsOutput = z.infer<
   typeof ExtractInterviewQuestionsOutputSchema
@@ -40,20 +41,20 @@ const prompt = ai.definePrompt({
   name: 'extractInterviewQuestionsPrompt',
   input: {schema: ExtractInterviewQuestionsInputSchema},
   output: {schema: ExtractInterviewQuestionsOutputSchema},
-  prompt: `You are an AI system that extracts interview questions from transcripts.
+  prompt: `You are an AI system that extracts interview questions from video transcripts.
 
-I will provide you with a transcript from a job interview video.
+I will provide you with a video from a job interview.
 Your tasks are:
-1. Identify which lines are questions asked by the interviewer.
-2. Extract ONLY those questions.
-3. Do not include the candidate\'s answers or any explanations.
-4. Do not generate new questions — only use what exists in the transcript.
-5. Present the questions in a clean numbered list.
-6. If the same question is repeated or rephrased, keep only the clearest version.
+1. Transcribe the video to identify what is said.
+2. Identify which lines are questions asked by the interviewer.
+3. Extract ONLY those questions.
+4. Do not include the candidate's answers or any explanations.
+5. Do not generate new questions — only use what exists in the interview.
+6. Present the questions in a clean numbered list.
+7. If the same question is repeated or rephrased, keep only the clearest version.
 
-Here is the transcript:
-<<<TRANSCRIPT>>>
-{{{transcript}}}`,
+Here is the video:
+{{media url=videoDataUri}}`,
 });
 
 const extractInterviewQuestionsFlow = ai.defineFlow(

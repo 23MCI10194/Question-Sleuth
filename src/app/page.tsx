@@ -8,35 +8,44 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import {
   Loader2,
   Copy,
   Trash2,
-  Mic,
+  Video,
   Bot,
   AlertTriangle,
+  Upload,
 } from 'lucide-react';
 import { getQuestionsAction } from './actions';
 
-const exampleTranscript = `Interviewer: Can you tell me about yourself?
-Candidate: Sure, I am a software engineer with 5 years of experience.
-Interviewer: Why did you leave your previous company?
-Candidate: Because I wanted more challenges.`;
-
 export default function Home() {
   const { toast } = useToast();
-  const [transcript, setTranscript] = useState(exampleTranscript);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [questions, setQuestions] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setVideoFile(file);
+    }
+  };
+
+  const toBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!transcript.trim()) {
-      setError('Transcript cannot be empty.');
+    if (!videoFile) {
+      setError('Please select a video file.');
       return;
     }
 
@@ -45,14 +54,15 @@ export default function Home() {
     setQuestions('');
 
     try {
-      const result = await getQuestionsAction({ transcript });
+      const videoDataUri = await toBase64(videoFile);
+      const result = await getQuestionsAction({ videoDataUri });
       if (result.error) {
         setError(result.error);
       } else {
         setQuestions(result.questions ?? '');
       }
     } catch (e) {
-      setError('An unexpected error occurred while communicating with the server.');
+      setError('An unexpected error occurred while processing the video.');
     } finally {
       setIsLoading(false);
     }
@@ -73,9 +83,12 @@ export default function Home() {
   };
 
   const handleClear = () => {
-    setTranscript('');
+    setVideoFile(null);
     setQuestions('');
     setError(null);
+    // Reset file input
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
+    if(fileInput) fileInput.value = '';
   };
 
   const formattedQuestions = questions
@@ -90,7 +103,7 @@ export default function Home() {
             Question Sleuth
           </h1>
           <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-            Paste your interview transcript below and let our AI pinpoint the
+            Upload your interview video below and let our AI pinpoint the
             questions for you. Perfect for interview prep and analysis.
           </p>
         </header>
@@ -98,32 +111,53 @@ export default function Home() {
         <Card className="w-full shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl">
-              <Mic className="text-primary" />
-              <span>Interview Transcript</span>
+              <Video className="text-primary" />
+              <span>Interview Video</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit}>
-              <Textarea
-                placeholder="Paste your transcript here..."
-                value={transcript}
-                onChange={(e) => setTranscript(e.target.value)}
-                rows={10}
-                className="text-base"
-              />
+              <div className="flex items-center justify-center w-full">
+                <label
+                  htmlFor="video-upload"
+                  className="flex flex-col items-center justify-center w-full h-48 border-2 border-border border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted"
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload className="w-10 h-10 mb-3 text-muted-foreground" />
+                    {videoFile ? (
+                      <p className="font-semibold text-primary">{videoFile.name}</p>
+                    ) : (
+                      <>
+                        <p className="mb-2 text-sm text-muted-foreground">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-muted-foreground">MP4, MOV, or other video formats</p>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    id="video-upload"
+                    type="file"
+                    className="hidden"
+                    accept="video/*"
+                    onChange={handleFileChange}
+                  />
+                </label>
+              </div>
+
               <div className="flex justify-between items-center mt-4">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={handleClear}
-                  disabled={!transcript && !questions && !error}
+                  disabled={!videoFile && !questions && !error}
                   className="text-muted-foreground"
                 >
                   <Trash2 className="mr-2 h-4 w-4" /> Clear
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading || !transcript.trim()}
+                  disabled={isLoading || !videoFile}
                   className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold"
                   size="lg"
                 >
@@ -180,7 +214,7 @@ export default function Home() {
                 </ol>
               ) : (
                 <p className="text-muted-foreground text-center py-4">
-                  No questions were found in the provided transcript.
+                  No questions were found in the provided video.
                 </p>
               )}
             </CardContent>

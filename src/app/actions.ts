@@ -11,15 +11,15 @@ interface ActionResult {
 }
 
 export async function getQuestionsAction(input: {
-  transcript: string;
+  videoDataUri: string;
 }): Promise<ActionResult> {
-  if (!input.transcript || input.transcript.trim().length === 0) {
-    return { error: 'Transcript cannot be empty.' };
+  if (!input.videoDataUri) {
+    return { error: 'Video data URI cannot be empty.' };
   }
 
   try {
     const result: ExtractInterviewQuestionsOutput =
-      await extractInterviewQuestions({ transcript: input.transcript });
+      await extractInterviewQuestions({ videoDataUri: input.videoDataUri });
     return { questions: result.questions };
   } catch (e: unknown) {
     console.error(e);
