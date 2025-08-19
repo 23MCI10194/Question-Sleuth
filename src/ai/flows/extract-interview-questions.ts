@@ -25,7 +25,7 @@ export type ExtractInterviewQuestionsInput = z.infer<
 const ExtractInterviewQuestionsOutputSchema = z.object({
   questions: z
     .array(z.string())
-    .describe('A list of questions extracted from the video transcript.'),
+    .describe('A list of at least 10 questions extracted from the video transcript if available.'),
 });
 export type ExtractInterviewQuestionsOutput = z.infer<
   typeof ExtractInterviewQuestionsOutputSchema
@@ -47,7 +47,7 @@ I will provide you with a video from a job interview.
 Your tasks are:
 1. Transcribe the video to identify what is said.
 2. Identify which lines are questions asked by the interviewer.
-3. Extract ONLY those questions.
+3. Extract ONLY those questions. Aim for at least 10 questions if they are present in the video.
 4. Do not include the candidate's answers or any explanations.
 5. Do not generate new questions — only use what exists in the interview.
 6. Present the questions as a list of strings.
